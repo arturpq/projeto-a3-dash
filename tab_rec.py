@@ -23,7 +23,7 @@ def render_tab_rec(): # Agora aceita o DataFrame completo (df)
     containers = [c1, c2, c3]
 
     for i, col in enumerate(cols_to_plot):
-        with col:
+        with containers[i]:
             fig = px.bar(
                 d,
                 x=col,
