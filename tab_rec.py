@@ -18,14 +18,15 @@ def render_tab_rec(): # Agora aceita o DataFrame completo (df)
     
     cols_to_plot = list(rec_cols_map.keys())
 
-    dist_data = get_standardized_interest_data(d, col, YES_NO)
-
     c1, c2, c3 = st.columns(3)
     c4, c5 = st.columns(2)
     containers = [c1, c2, c3]
 
     for i, col in enumerate(cols_to_plot):
         with containers[i]:
+
+            dist_data = get_standardized_interest_data(d, col, YES_NO)
+            
             title = rec_cols_map[col]
             st.subheader(title)
             fig = px.bar(
