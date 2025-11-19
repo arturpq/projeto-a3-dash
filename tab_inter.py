@@ -4,8 +4,8 @@ import streamlit as st
 import plotly.express as px
 
 from chart_helpers import get_percent_data, get_standardized_interest_data, plot_styled_bar
-from constants import DEFAULT_PLOT_LAYOUT, INTEREST_SCALE_COLORS, INTEREST_SCALE_ORDER
-from data_preparation import df
+from constants import DEFAULT_PLOT_LAYOUT, INTEREST_SCALE_COLORS, INTEREST_SCALE_ORDER, UNIVERSITY_TIME
+from data_preparation import df_final as d
 
 
 def render_tab_inter():
@@ -31,7 +31,7 @@ def render_tab_inter():
 
 
     for i, col in enumerate(cols_to_plot):
-        if col not in df.columns:
+        if col not in d.columns:
             containers[i].warning(f"Coluna '{col}' não encontrada.")
             continue
 
@@ -40,7 +40,7 @@ def render_tab_inter():
             st.subheader(title)
 
             # 1. Padroniza os dados
-            dist_data = get_standardized_interest_data(df, col, INTEREST_SCALE_ORDER)
+            dist_data = get_standardized_interest_data(d, col, INTEREST_SCALE_ORDER)
 
             # 2. Cria o gráfico de barras vertical
             fig = px.bar(
@@ -54,8 +54,8 @@ def render_tab_inter():
                     col: "Nível de Interesse",
                     "count": "Participantes"
                 },
-                custom_data=["percentage"],
-                orientation="v"
+                custom_data=["percentage"]
+                
             )
 
             # Define a ordem correta no eixo X
@@ -76,3 +76,14 @@ def render_tab_inter():
             )
 
             st.plotly_chart(fig, use_container_width=True)
+    preferred_shift_data = get_percent_data(d, "preferred_shift")
+    fig = plot_styled_bar(
+        df=preferred_shift_data,
+        x_col="preferred_shift",
+        y_col="count",
+        x_title="Turno Preferido",
+        y_title="Participantes",
+        orientation="h",
+        color_discrete_map=UNIVERSITY_TIME
+    )
+    st.plotly_chart(fig, use_container_width=True)    

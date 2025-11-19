@@ -3,7 +3,7 @@ from datetime import datetime
 import streamlit as st
 from data_preparation import load_and_prepare_data
 from chart_helpers import get_percent_data, plot_styled_bar, plot_styled_pie
-from constants import ESCOLARIDADE, GENDER_COLORS, GENDER_HOVER_TEMPLATE, SIM_NAO, UNIVERSITY_COLORS
+from constants import HIGHSCHOOL_YEAR, GENDER_COLORS, GENDER_HOVER_TEMPLATE, YES_NO, UNIVERSITY_COLORS
 
 
 def render_tab_geral():
@@ -64,7 +64,8 @@ def render_tab_geral():
             orientation="h"
         )
         st.plotly_chart(fig, use_container_width=True)
-    st.write("Com base na análise é possivel perce")
+    st.write("A análise dos dados revelou a ausência dos valores de idade para 7 participantes da pesquisa e a não resposta sobre o gênero por 1 participante.")
+    st.write("Devido à semelhança entre as idades registradas, optou-se por manter os registros com idade ausente, excluindo a variável idade da análise aprofundada. O registro com informação de gênero ausente foi removido do dataset para garantir a integridade da análise dessa variável.")
     st.markdown("---")
     st.header("Ensino Médio e Universidade")
 
@@ -73,34 +74,34 @@ def render_tab_geral():
     # -------- Ensino médio --------
     with col_hs:
         st.subheader("Ano do Ensino Médio")
-        hs = get_percent_data(df, "high_school_year")
+        hs = get_percent_data(df_gender, "high_school_year")
         fig = plot_styled_bar(
             df=hs,
             x_col="high_school_year",
             y_col="count",
             x_title="Ano",
             y_title="Participantes",
-            color_discrete_map=ESCOLARIDADE
+            color_discrete_map=HIGHSCHOOL_YEAR
         )
         st.plotly_chart(fig, use_container_width=True)
 
     # -------- Universidade --------
     with col_uni:
         st.subheader("Planeja Fazer Faculdade?")
-        plans_uni_data = get_percent_data(df, "plans_university")
+        plans_uni_data = get_percent_data(df_gender, "plans_university")
         fig = plot_styled_bar(
             df=plans_uni_data,
             x_col="plans_university",
             y_col="count",
             x_title="Resposta",
             y_title="Participantes",
-            color_discrete_map=SIM_NAO
+            color_discrete_map=YES_NO
         )
         st.plotly_chart(fig, use_container_width=True)
 
     with col_uni2:
         st.subheader("Tipo de Faculdade")
-        uni = get_percent_data(df, "university_choice")
+        uni = get_percent_data(df_gender, "university_choice")
         fig = plot_styled_bar(
             df=uni,
             x_col="university_choice",
@@ -110,12 +111,5 @@ def render_tab_geral():
             color_discrete_map=UNIVERSITY_COLORS
         )
         st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("---")
-    st.header("Dados")
-
-    st.subheader("Análise filtrada (idade > 0)")
-    st.dataframe(df_age)
-
-    st.subheader("Todos os dados processados")
-    st.dataframe(df)
+    st.write("A análise da intenção de cursar faculdade revelou a existência de apenas um participante que não planeja ingressar no ensino superior")
+    st.write("Por não refletir o público-alvo da pesquisa, sendo um outlier e um valor indesejado, este registro foi removido do dataset.")

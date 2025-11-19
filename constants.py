@@ -38,11 +38,15 @@ INTEREST_SCALE_COLORS = {
     "Muito interesse": "#5cb85c"     # Verde
 }
 
-SIM_NAO = {
+YES_NO = {
     "Sim": "#5cb85c",
     "Não": "#d9534f"
 }
-ESCOLARIDADE = {
+HIGHSCHOOL_YEAR = {
     "3º ano": "#3C7FFA",
     "2º ano": "#3CF3F5"
+}
+UNIVERSITY_TIME = {
+    "Noite":"#6C55E0",
+    "Manhã": "#E0D055"
 }

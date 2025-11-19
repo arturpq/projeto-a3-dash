@@ -4,7 +4,7 @@ import plotly.express as px
 
 from tab_geral import render_tab_geral
 from tab_inter import render_tab_inter
-from tab_tec import render_tab_tec
+from tab_rec import render_tab_rec
 from tab_gender import render_tab_gender
 
 from data_preparation import load_and_prepare_data
@@ -18,7 +18,7 @@ st.title("Análise de Respostas do Evento")
 df, df_age, df_gender = load_and_prepare_data()
 
 # Abas
-tab_geral, tab_edu,  tab_tec, tab_gender, tab_age, tab_atributos = st.tabs(["Análise Geral","Perfil Educacional", "Análise da Área", "Análise de Gênero", "Análise de Idade", "Visão Geral"])
+tab_geral, tab_inter,  tab_rec, tab_gender, tab_age, tab_atributos = st.tabs(["Análise Geral","Análise de Interesses", "Análise de Recursos", "Análise de Gênero", "Análise de Idade", "Visão Geral"])
 
 # ============================================================
 # 1 — GERAL
@@ -29,13 +29,13 @@ with tab_geral:
 # ============================================================
 # ABA 2 — IDADE
 # ============================================================
-with tab_edu:
+with tab_inter:
 
     render_tab_inter()
 
-with tab_tec:
+with tab_rec:
 
-    render_tab_tec()
+    render_tab_rec()
 
 
 with tab_gender:

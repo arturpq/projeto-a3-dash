@@ -70,3 +70,4 @@ def load_and_prepare_data(file_path="Raw_Data.xlsx"):
 
     return df, df_age, df_gender
 df, df_age, df_gender = load_and_prepare_data()
+df_final = df_gender[df_gender["plans_university"] == "Sim"].copy()

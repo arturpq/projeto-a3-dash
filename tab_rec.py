@@ -2,8 +2,8 @@
 
 import streamlit as st
 from chart_helpers import get_percent_data, plot_styled_bar
-from data_preparation import df as d
-def render_tab_tec(): # Agora aceita o DataFrame completo (df)
+from data_preparation import df_final as d
+def render_tab_rec(): # Agora aceita o DataFrame completo (df)
     """
     Renderiza os gráficos relacionados a tecnologia, dispositivos e avaliação do evento
     de forma geral (univariada).

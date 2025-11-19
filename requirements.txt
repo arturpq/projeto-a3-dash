@@ -1,0 +1,4 @@
+treamlit
+pandas
+plotly-express
+openpyxl
