@@ -2,37 +2,43 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 
-from data_preparation import df
+
+from data_preparation import df_final as d_clean
+from data_preparation import df as d
 from constants import DEFAULT_PLOT_LAYOUT, GENDER_COLORS, UNIVERSITY_COLORS, YES_NO
 
-def render_tab_hs():
-    
-    df_clean = df.copy()
-    df_clean = df_clean[df_clean['plans_university'] != 'Não']
-    df_clean = df_clean[df_clean['gender'] != 'Prefiro não dizer']
+def render_tab_hs(use_removed_data):
+    st.header("Análise do Ensino Médio")
 
-    col_toggle, _ = st.columns([1, 3])
-    with col_toggle:
-        include_missing = st.toggle("Incluir dados desconsiderados", value=False)
-    
-    if include_missing:
-        st.info("Exibindo dados brutos (inclui quem não quer faculdade ou não informou gênero, se houver resposta de universidade).")
-        d_base = df.copy() 
-    else:
-        d_base = df_clean.copy() 
-    st.metric("Tamanho da Amostra",len(d_base))
     st.subheader("Intenção de Universidade (Pública vs. Privada)")
     st.markdown("Comparativo entre alunos do 3º e 2º ano em relação ao tipo de universidade pretendida.")
 
+    
+    d_base = d if use_removed_data else d_clean
     d_filtered = d_base.copy()
 
-    cols_to_clean = ['plans_university', 'gender', 'university_choice', 'high_school_year', 'has_pc', 'programming_experience']
+    
+    cols_to_clean = ['plans_university', 'gender', 'university_choice', 'high_school_year', 'has_pc', 'programming_experience', 'preferred_shift']
     for col in cols_to_clean:
         if col in d_filtered.columns:
             d_filtered[col] = d_filtered[col].astype(str).str.strip()
 
+    name_map = {
+        'Universidade Pública': 'Pública',
+        'Universidade Privada': 'Privada',
+        'Pública': 'Pública',
+        'Privada': 'Privada'
+    }
+    d_filtered['university_choice'] = d_filtered['university_choice'].replace(name_map)
+
+    
+    UNI_COLORS_SAFE = {
+        'Pública': '#F57C2A', 
+        'Privada': '#2AEAF5'
+    }
+    
     target_years = ['2º ano', '3º ano']
-    target_unis = list(UNIVERSITY_COLORS.keys()) 
+    target_unis = ['Pública', 'Privada']
     
     d_filtered = d_filtered[
         d_filtered['high_school_year'].isin(target_years) & 
@@ -41,7 +47,11 @@ def render_tab_hs():
     
     grouped_data = d_filtered.groupby(['high_school_year', 'university_choice']).size().reset_index(name='count')
     total = grouped_data['count'].sum()
-    grouped_data['percentage'] = (grouped_data['count'] / total * 100).round(1) if total > 0 else 0
+    
+    if total > 0:
+        grouped_data['percentage'] = (grouped_data['count'] / total * 100).round(1)
+    else:
+        grouped_data['percentage'] = 0
 
     if not grouped_data.empty:
         fig = px.bar(
@@ -50,11 +60,11 @@ def render_tab_hs():
             y='count',                  
             color='university_choice',  
             barmode='group',            
-            color_discrete_map=UNIVERSITY_COLORS,
+            color_discrete_map=UNI_COLORS_SAFE,
             labels={
                 'high_school_year': 'Ano Escolar',
                 'count': 'Quantidade de Alunos',
-                'university_choice': 'Tipo de Universidade'
+                'university_choice': 'Universidade'
             },
             custom_data=['percentage']
         )
@@ -65,7 +75,7 @@ def render_tab_hs():
         fig.update_layout(**DEFAULT_PLOT_LAYOUT, title_text="", legend_title_text="")
         st.plotly_chart(fig, use_container_width=True, key="hs_uni_comparison")
     else:
-        st.warning("Não há dados suficientes com os filtros atuais.")
+        st.warning("Não há dados suficientes.")
 
     st.markdown("---")
 
@@ -92,7 +102,7 @@ def render_tab_hs():
             custom_data=['percentage']
         )
         fig.update_traces(
-            hovertemplate="<b>%{x}</b><br>Gênero: <b>%{data.name}</b><br>Qtd: %{y}<br>Pct: %{customdata[0]}%<extra></extra>"
+            hovertemplate="<b>%{x}</b><br>Gênero: <b>%{data.name}</b><br>Quantidade: %{y}<br>Pct na Barra: %{customdata[0]}%<extra></extra>"
         )
         fig.update_layout(**DEFAULT_PLOT_LAYOUT, title_text="", legend_title_text="")
         st.subheader(title_text)
@@ -118,12 +128,17 @@ def render_tab_hs():
             st.info(f"Sem dados: {uni_type}")
             return None
 
+        
         grouped = subset.groupby(['has_pc', 'gender']).size()
-        
-        present_genders = subset['gender'].unique()
-        
-        all_combinations = pd.MultiIndex.from_product([['Sim', 'Não'], present_genders], names=['has_pc', 'gender'])
-        grouped = grouped.reindex(all_combinations, fill_value=0).reset_index(name='count')
+        try:
+            present_genders = subset['gender'].unique()
+            if len(present_genders) > 0:
+                all_combinations = pd.MultiIndex.from_product([['Sim', 'Não'], present_genders], names=['has_pc', 'gender'])
+                grouped = grouped.reindex(all_combinations, fill_value=0).reset_index(name='count')
+            else:
+                grouped = grouped.reset_index(name='count')
+        except Exception:
+            grouped = grouped.reset_index(name='count')
         
         grouped['total_pc'] = grouped.groupby('has_pc')['count'].transform('sum')
         grouped['percentage'] = 0.0
@@ -142,7 +157,7 @@ def render_tab_hs():
         )
         fig.update_xaxes(categoryorder='array', categoryarray=['Sim', 'Não'])
         fig.update_traces(
-            hovertemplate="<b>Tem PC? %{x}</b><br>Gênero: <b>%{data.name}</b><br>Qtd: %{y}<br>Pct na Categoria: %{customdata[0]}%<extra></extra>"
+            hovertemplate="<b>Tem PC? %{x}</b><br>Gênero: <b>%{data.name}</b><br>Quantidade: %{y}<br><extra></extra>"
         )
         fig.update_layout(**DEFAULT_PLOT_LAYOUT, title_text="", legend_title_text="Gênero")
         st.caption(title_text) 
@@ -160,18 +175,13 @@ def render_tab_hs():
         st.markdown("") 
         plot_pc_specific('2º ano', 'Pública', "Pretende: Pública")
 
+    
     st.markdown("---")
-
     st.subheader("Conhecimento em Programação")
     st.markdown("Nível de experiência prévia com programação.")
 
     c5, c6 = st.columns(2)
     PROG_ORDER = ["Sim, já pratiquei", "Já vi, mas nunca pratiquei", "Ainda não"]
-    
-    UNI_COLORS_SHORT = {
-        'Pública': UNIVERSITY_COLORS.get('Universidade Pública', '#F57C2A'),
-        'Privada': UNIVERSITY_COLORS.get('Universidade Privada', '#2AEAF5')
-    }
 
     def plot_prog_experience(year_label, title_text):
         df_year = d_filtered[d_filtered['high_school_year'] == year_label].copy()
@@ -180,9 +190,13 @@ def render_tab_hs():
             st.warning(f"Sem dados para {year_label}.")
             return None
 
+        
         grouped = df_year.groupby(['programming_experience', 'university_choice']).size().reset_index(name='count')
+        
         grouped['total_xp'] = grouped.groupby('programming_experience')['count'].transform('sum')
-        grouped['percentage'] = (grouped['count'] / grouped['total_xp'] * 100).round(1)
+        grouped['percentage'] = 0.0
+        mask = grouped['total_xp'] > 0
+        grouped.loc[mask, 'percentage'] = (grouped.loc[mask, 'count'] / grouped.loc[mask, 'total_xp'] * 100).round(1)
 
         fig = px.bar(
             grouped,
@@ -190,13 +204,13 @@ def render_tab_hs():
             y='count',
             color='university_choice',  
             barmode='stack',            
-            color_discrete_map=UNI_COLORS_SHORT, 
+            color_discrete_map=UNI_COLORS_SAFE, 
             labels={'university_choice': 'Universidade', 'count': 'Participantes', 'programming_experience': 'Experiência'},
             custom_data=['percentage']
         )
         fig.update_xaxes(categoryorder='array', categoryarray=PROG_ORDER)
         fig.update_traces(
-            hovertemplate="<b>%{x}</b><br>Destino: <b>%{data.name}</b><br>Qtd: %{y}<br>Pct na Categoria: %{customdata[0]}%<extra></extra>"
+            hovertemplate="<b>%{x}</b><br>Destino: <b>%{data.name}</b><br>Quantidade: %{y}<br>Pct na Categoria: %{customdata[0]}%<extra></extra>"
         )
         fig.update_layout(**DEFAULT_PLOT_LAYOUT, title_text="", legend_title_text="")
         st.subheader(title_text)

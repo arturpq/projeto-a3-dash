@@ -7,14 +7,9 @@ from constants import DEFAULT_PLOT_LAYOUT, INTEREST_SCALE_COLORS, INTEREST_SCALE
 from data_preparation import df_final as d_clean
 from data_preparation import df as d
 
-def render_tab_inter():
+def render_tab_inter(use_removed_data):
     
-    use_clean_data = st.toggle(
-        "Usar dados desconsiderados", 
-        value=True
-    )
-    
-    df = d if use_clean_data else d_clean
+    df = d if use_removed_data else d_clean
     
     st.metric("Participantes da Amostra", len(df))
 
