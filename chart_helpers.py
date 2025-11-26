@@ -1,5 +1,3 @@
-# chart_helpers.py
-
 import pandas as pd
 import plotly.express as px
 from constants import DEFAULT_PLOT_LAYOUT, GENDER_COLORS, INTEREST_SCALE_ORDER
@@ -28,11 +26,6 @@ def get_cross_data(df, category_col, gender_col="gender"):
         id_vars=category_col, var_name=gender_col, value_name="count"
     )
 
-    # Calcula a porcentagem em relação ao total GERAL (não solicitado, mas útil)
-    # total = cross_df["count"].sum()
-    # cross_df["percentage"] = (cross_df["count"] / total * 100).round(2)
-
-    # Calcula a porcentagem DENTRO da categoria (para o hover do gráfico)
     cross_df["category_total"] = cross_df.groupby(category_col)["count"].transform("sum")
     cross_df["percent_in_category"] = (
         cross_df["count"] / cross_df["category_total"] * 100
@@ -57,7 +50,7 @@ def plot_styled_pie(df, names_col, values_col, colors_map, hover_template):
 
     fig.update_traces(
         hovertemplate=hover_template,
-        textinfo="percent"  # sem texto interno
+        textinfo="percent"  
     )
 
     fig.update_layout(
@@ -73,32 +66,29 @@ def plot_styled_bar(df, x_col, y_col, x_title, y_title, orientation="v", color_d
     if df.empty:
         return None
 
-    # Garantir que percentage exista
+    
     if "percentage" in df.columns:
         df["percentage"] = df["percentage"].astype(float)
 
-    # Configura eixos
     px_x = x_col if orientation == "v" else y_col
     px_y = y_col if orientation == "v" else x_col
     
-    # Define a coluna que será usada para colorir (se o mapa for fornecido)
     color_col = x_col if color_discrete_map else None
 
     fig = px.bar(
         df,
         x=px_x,
         y=px_y,
-        color=color_col, # Usar a coluna para colorir
-        color_discrete_map=color_discrete_map, # Aplicar o mapa de cores
+        color=color_col, 
+        color_discrete_map=color_discrete_map, 
         labels={
-        px_x: x_title,   # título do eixo X
-        px_y: y_title    # título do eixo Y
+        px_x: x_title,   
+        px_y: y_title    
     },
         custom_data=["percentage"],
         orientation=orientation
     )
 
-    # HOVER CORRIGIDO
     hover_template = (
     f"<b>{x_title}:</b> %{{x}}<br>"
     f"<b>{y_title}:</b> %{{y}}<br>"
@@ -112,7 +102,6 @@ def plot_styled_bar(df, x_col, y_col, x_title, y_title, orientation="v", color_d
         showlegend=False
     )
 
-    # 🔥 Remover qualquer título automático
     fig.update_layout(title_text="")
 
     return fig
@@ -138,15 +127,13 @@ def plot_grouped_bar(df, category_col, gender_col, x_title, y_title):
             "count": y_title,
             gender_col: "Gênero",
         },
-        # Usamos a porcentagem DENTRO da categoria para o hover
         custom_data=["percent_in_category"],
     )
 
-    # HOVER CORRIGIDO
     fig.update_traces(
         hovertemplate=(
             f"<b>{x_title}:</b> %{{x}}<br>"
-            "<b>Gênero:</b> %{customdata[0]}<br>" # Customdata 0 will be the percent
+            "<b>Gênero:</b> %{customdata[0]}<br>" 
             "<b>Contagem:</b> %{y}<br>"
             "<b>Percentual na Categoria:</b> %{customdata[0]:.2f}%<extra></extra>"
         )
@@ -170,29 +157,105 @@ def get_standardized_interest_data(df, column, interest_order):
     if df.empty or column not in df.columns:
         return pd.DataFrame()
 
-    # 1. Obter a contagem real dos dados
     counts = df[column].value_counts().reset_index()
     counts.columns = [column, "count"]
 
-    # 2. Criar um DataFrame base com as categorias fixas
     base_df = pd.DataFrame({
         column: interest_order,
         "count": 0
     })
 
-    # 3. Mesclar (merge) com os dados reais
     merged_df = base_df.merge(counts, on=column, how="left", suffixes=('_base', '_real'))
     
-    # 4. Atualizar 'count' usando os valores reais (onde existirem)
     merged_df['count'] = merged_df['count_real'].fillna(merged_df['count_base'])
     merged_df = merged_df.drop(columns=['count_base', 'count_real'])
 
-    # 5. Calcular porcentagem
     total = merged_df["count"].sum()
     merged_df["percentage"] = (merged_df["count"] / total * 100).round(2)
     
-    # 6. Garantir a ordem
     merged_df[column] = pd.Categorical(merged_df[column], categories=interest_order, ordered=True)
     merged_df = merged_df.sort_values(column)
 
     return merged_df
+import pandas as pd
+
+
+SUBJECT_MAP = {
+    "Matemática": [
+        "matematica", 
+    ],
+    "Física": [
+        "fisica", 
+        "fisic"
+    ],
+    "Português": [
+        "português.", 
+    ],
+    "História": [
+        "historia", 
+        "history"
+    ],
+    "Educação Física": [
+        "educação fisica"
+    ],
+    "Química": [
+        "quimica" 
+        
+    ],
+    "Sem Resposta": [
+        "eu não sei... kkkk"
+    ]
+}
+
+AREA_MAP = {
+    # Ciências da Natureza
+    "Biologia": "Ciências da Natureza",
+    "Química": "Ciências da Natureza",
+    
+    # Ciências Humanas e Sociais
+    "História": "Ciências Humanas",
+    "Geografia": "Ciências Humanas",
+    "Sociologia": "Ciências Humanas",
+    "Filosofia": "Ciências Humanas",
+    
+    # Matemática e Exatas
+    "Matemática": "Ciências Exatas",
+    "Informática": "Ciências Exatas",
+    
+    # Linguagens
+    "Português": "Linguagens",
+    "Inglês": "Linguagens",
+    
+    # Outros/Geral (Manter para filtrar ou visualizar ruído)
+    "Educação Física": "Outros/Geral",
+    "Sem Resposta": "Outros/Geral"
+}
+
+
+AREA_COLORS = {
+    "Ciências Exatas": "#1f77b4",          
+    "Ciências da Natureza": "#2ca02c",     
+    "Ciências Humanas": "#ff7f0e",        
+    "Linguagens": "#9467bd",               
+    "Outros/Geral": "#7f7f7f"              
+}
+
+def map_to_area(subject: str) -> str:
+    """Mapeia uma matéria normalizada para uma área de conhecimento."""
+    return AREA_MAP.get(subject, "Não Classificado")
+
+def normalize_subject(raw_subject: str) -> str:
+    """
+    Verifica se uma string bruta está no array de variações
+    e a substitui pela chave normalizada correspondente.
+    """
+    if not isinstance(raw_subject, str):
+        return raw_subject  
+    
+    cleaned_subject = raw_subject.strip().lower()
+
+    for correct_name, variations in SUBJECT_MAP.items():
+        if cleaned_subject in variations:
+            return correct_name  
+
+    return cleaned_subject.title()

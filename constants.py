@@ -1,4 +1,3 @@
-# constants.py
 
 GENDER_COLORS = {
     "Homem": "#1f91dc",
@@ -32,10 +31,10 @@ INTEREST_SCALE_ORDER = [
 ]
 
 INTEREST_SCALE_COLORS = {
-    "Nenhum interesse": "#d9534f",   # Vermelho
-    "Pouco interesse": "#f0ad4e",    # Laranja
-    "Algum interesse": "#5bc0de",    # Azul claro/Ciano
-    "Muito interesse": "#5cb85c"     # Verde
+    "Nenhum interesse": "#d9534f",   
+    "Pouco interesse": "#f0ad4e",   
+    "Algum interesse": "#5bc0de",    
+    "Muito interesse": "#5cb85c"    
 }
 
 YES_NO = {
